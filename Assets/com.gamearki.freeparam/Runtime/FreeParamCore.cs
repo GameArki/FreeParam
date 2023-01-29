@@ -10,16 +10,25 @@ namespace GameArki.FreeParam {
 
         // ==== External ====
         // Initialize
-        public static void Initialize() {
+        public static void Initialize(string path = null) {
+
             // 提示需创建文件: param.fp
-            string path = Path.Combine(Application.dataPath, "param.fp");
-            if (!File.Exists(path)) {
-                Debug.LogError("Please create file: param.fp");
-                return;
+            if (path == null) {
+                path = Path.Combine(Application.dataPath, "FreeParam.txt");
+                if (!File.Exists(path)) {
+                    Debug.LogError("Please create file: FreeParam.txt, in Assets folder.");
+                    return;
+                }
+            } else {
+                if (!File.Exists(path)) {
+                    Debug.LogError("File not found: " + path);
+                    return;
+                }
             }
 
             // 读取文件
-            DeserializeAll();
+            DeserializeAll(path);
+
         }
 
         // Get
@@ -107,6 +116,10 @@ namespace GameArki.FreeParam {
             "string", "string[]",
         };
 
+        static HashSet<char> ignores = new HashSet<char> {
+            '\r', '\n',
+        };
+
         static HashSet<char> splits = new HashSet<char> {
             ' ', '\t',
         };
@@ -114,12 +127,7 @@ namespace GameArki.FreeParam {
         // Serialize
         enum Status { None, Type, Key, Value, }
 
-        static void DeserializeAll() {
-
-            string path = Path.Combine(Application.dataPath, "param.fp");
-            if (!File.Exists(path)) {
-                return;
-            }
+        static void DeserializeAll(string path) {
 
             string text = File.ReadAllText(path);
             int index = 0;
@@ -131,9 +139,15 @@ namespace GameArki.FreeParam {
                 char cur = text[i];
                 if (status == Status.Type) {
                     // ---- Type ----
+                    if (ignores.Contains(cur)) {
+                        index = i + 1;
+                        continue;
+                    }
+
                     // 遇到 split 时, 读取 type, 并切换到 key
                     if (splits.Contains(cur)) {
                         tmpType = text.Substring(index, i - index);
+                        Debug.Log("FindType: " + tmpType);
                         if (types.Contains(tmpType)) {
                             status = Status.Key;
                             index = i + 1;
@@ -151,11 +165,10 @@ namespace GameArki.FreeParam {
                     // 遇到 = 时, 读取 key, 并切换到 value
                     if (cur == '=') {
                         tmpKey = text.Substring(index, i - index);
+                        Debug.Log("FindKey: " + tmpKey);
+                        tmpKey = tmpKey.Trim();
                         status = Status.Value;
                         index = i + 1;
-                    } else {
-                        Debug.LogError($"FreeParam: Invalid sign: {cur}");
-                        return;
                     }
                 } else if (status == Status.Value) {
                     // ---- Value ----
@@ -166,7 +179,15 @@ namespace GameArki.FreeParam {
                     // 遇到 ; 时, 读取 value, 并切换到 type
                     if (cur == ';') {
                         string tmpValue = text.Substring(index, i - index);
-                        D_OneType(tmpType, tmpKey, tmpValue);
+                        Debug.Log("FindValue: " + tmpValue);
+                        bool succ = D_OneType(tmpType, tmpKey, tmpValue);
+                        if (succ) {
+                            status = Status.Type;
+                        } else {
+                            Debug.LogError($"FreeParam: Deserialize failed: {tmpType} {tmpKey} {tmpValue}");
+                            return;
+                        }
+                        index = i + 1;
                     }
                 }
             }
@@ -216,8 +237,13 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     boolValues[key] = value;
                 }
+
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
-                Debug.LogError($"FreeParam: Invalid bool value: {inputValue}");
+                Debug.LogError($"FreeParam: Invalid bool key: {key} value: {inputValue}");
                 return false;
             }
             return succ;
@@ -225,7 +251,10 @@ namespace GameArki.FreeParam {
 
         static bool D_BoolArray(string key, string inputValue) {
 
+            inputValue = inputValue.Trim();
+
             if (!IsValidateArray(inputValue)) {
+                Debug.LogError($"FreeParam: Invalid boolArray key: {key} value: {inputValue}");
                 return false;
             }
 
@@ -235,11 +264,13 @@ namespace GameArki.FreeParam {
             string[] values = inputValue.Split(',');
             bool[] array = new bool[values.Length];
             for (int j = 0; j < values.Length; j += 1) {
-                bool succ = bool.TryParse(values[j], out bool value);
+                string cur = values[j];
+                cur = cur.Trim();
+                bool succ = bool.TryParse(cur, out bool value);
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid bool value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid boolArray value: {cur}");
                     return false;
                 }
             }
@@ -265,6 +296,11 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     byteValues[key] = value;
                 }
+
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid byte value: {inputValue}");
                 return false;
@@ -273,6 +309,8 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_ByteArray(string key, string inputValue) {
+
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -288,7 +326,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid byte value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid byteArray value: {values[j]}");
                     return false;
                 }
             }
@@ -314,6 +352,11 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     sbyteValues[key] = value;
                 }
+
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid sbyte value: {inputValue}");
                 return false;
@@ -323,6 +366,7 @@ namespace GameArki.FreeParam {
 
         static bool D_SByteArray(string key, string inputValue) {
 
+            inputValue = inputValue.Trim();
             if (!IsValidateArray(inputValue)) {
                 return false;
             }
@@ -337,7 +381,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid sbyte value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid sbyteArray value: {values[j]}");
                     return false;
                 }
             }
@@ -363,6 +407,10 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     shortValues[key] = value;
                 }
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid short value: {inputValue}");
                 return false;
@@ -372,6 +420,7 @@ namespace GameArki.FreeParam {
 
         static bool D_ShortArray(string key, string inputValue) {
 
+            inputValue = inputValue.Trim();
             if (!IsValidateArray(inputValue)) {
                 return false;
             }
@@ -386,7 +435,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid short value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid shortArray value: {values[j]}");
                     return false;
                 }
             }
@@ -412,6 +461,10 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     ushortValues[key] = value;
                 }
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid ushort value: {inputValue}");
                 return false;
@@ -420,6 +473,7 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_UShortArray(string key, string inputValue) {
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -435,7 +489,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid ushort value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid ushortArray value: {values[j]}");
                     return false;
                 }
             }
@@ -461,6 +515,10 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     intValues[key] = value;
                 }
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid int value: {inputValue}");
                 return false;
@@ -469,6 +527,7 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_IntArray(string key, string inputValue) {
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -484,7 +543,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid int value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid intArray value: {values[j]}");
                     return false;
                 }
             }
@@ -510,6 +569,10 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     uintValues[key] = value;
                 }
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid uint value: {inputValue}");
                 return false;
@@ -518,6 +581,7 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_UIntArray(string key, string inputValue) {
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -533,7 +597,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid uint value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid uintArray value: {values[j]}");
                     return false;
                 }
             }
@@ -559,6 +623,10 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     longValues[key] = value;
                 }
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid long value: {inputValue}");
                 return false;
@@ -567,6 +635,7 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_LongArray(string key, string inputValue) {
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -582,7 +651,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid long value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid longArray value: {values[j]}");
                     return false;
                 }
             }
@@ -608,6 +677,10 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     ulongValues[key] = value;
                 }
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid ulong value: {inputValue}");
                 return false;
@@ -616,6 +689,7 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_ULongArray(string key, string inputValue) {
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -631,7 +705,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid ulong value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid ulongArray value: {values[j]}");
                     return false;
                 }
             }
@@ -657,6 +731,10 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     floatValues[key] = value;
                 }
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid float value: {inputValue}");
                 return false;
@@ -665,6 +743,7 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_FloatArray(string key, string inputValue) {
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -680,7 +759,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid float value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid floatArray value: {values[j]}");
                     return false;
                 }
             }
@@ -706,6 +785,10 @@ namespace GameArki.FreeParam {
                 if (!added) {
                     doubleValues[key] = value;
                 }
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
+                }
             } else {
                 Debug.LogError($"FreeParam: Invalid double value: {inputValue}");
                 return false;
@@ -714,6 +797,7 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_DoubleArray(string key, string inputValue) {
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -729,7 +813,7 @@ namespace GameArki.FreeParam {
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid double value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid doubleArray value: {values[j]}");
                     return false;
                 }
             }
@@ -749,11 +833,16 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_Char(string key, string inputValue) {
+            inputValue = ReplaceChar(inputValue);
             bool succ = char.TryParse(inputValue, out char value);
             if (succ) {
                 bool added = charValues.TryAdd(key, value);
                 if (!added) {
                     charValues[key] = value;
+                }
+                added = objValues.TryAdd(key, value);
+                if (!added) {
+                    objValues[key] = value;
                 }
             } else {
                 Debug.LogError($"FreeParam: Invalid char value: {inputValue}");
@@ -763,6 +852,7 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_CharArray(string key, string inputValue) {
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -774,11 +864,13 @@ namespace GameArki.FreeParam {
             string[] values = inputValue.Split(',');
             char[] array = new char[values.Length];
             for (int j = 0; j < values.Length; j += 1) {
-                bool succ = char.TryParse(values[j], out char value);
+                string cur = values[j];
+                cur = ReplaceChar(cur);
+                bool succ = char.TryParse(cur, out char value);
                 if (succ) {
                     array[j] = value;
                 } else {
-                    Debug.LogError($"FreeParam: Invalid char value: {values[j]}");
+                    Debug.LogError($"FreeParam: Invalid charArray value: {cur}");
                     return false;
                 }
             }
@@ -798,14 +890,20 @@ namespace GameArki.FreeParam {
         }
 
         static bool D_String(string key, string inputValue) {
+            inputValue = ReplaceString(inputValue);
             bool added = stringValues.TryAdd(key, inputValue);
             if (!added) {
                 stringValues[key] = inputValue;
+            }
+            added = objValues.TryAdd(key, inputValue);
+            if (!added) {
+                objValues[key] = inputValue;
             }
             return true;
         }
 
         static bool D_StringArray(string key, string inputValue) {
+            inputValue = inputValue.Trim();
 
             if (!IsValidateArray(inputValue)) {
                 return false;
@@ -817,7 +915,9 @@ namespace GameArki.FreeParam {
             string[] values = inputValue.Split(',');
             string[] array = new string[values.Length];
             for (int j = 0; j < values.Length; j += 1) {
-                array[j] = values[j];
+                string cur = values[j];
+                cur = ReplaceString(cur);
+                array[j] = cur;
             }
 
             // 添加到泛字典
@@ -843,6 +943,16 @@ namespace GameArki.FreeParam {
 
         static string SubArray(string inputValue) {
             return inputValue.Substring(1, inputValue.Length - 2);
+        }
+
+        static string ReplaceChar(string inputValue) {
+            inputValue = inputValue.Trim();
+            return inputValue.Replace("'", "");
+        }
+
+        static string ReplaceString(string inputValue) {
+            inputValue = inputValue.Trim();
+            return inputValue.Replace("\"", "");
         }
 
     }

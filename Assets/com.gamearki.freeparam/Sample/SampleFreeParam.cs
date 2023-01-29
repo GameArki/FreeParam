@@ -7,9 +7,9 @@ namespace GameArki.FreeParam.Sample {
     public class SampleFreeParam : MonoBehaviour {
 
         void Awake() {
-            string src = "true ";
-            bool has = bool.TryParse(src, out bool b);
-            Debug.Log(b);
+            FreeParamCore.Initialize();
+
+            FreeParamCore.TryGetBool("b", out bool b);
         }
     }
 

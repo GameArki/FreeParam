@@ -1,3 +1,16 @@
 {
-	"name": "GameArki.FreeParam.Sample"
+    "name": "GameArki.FreeParam.Sample",
+    "rootNamespace": "",
+    "references": [
+        "GUID:fda54d173e9625f4597161535c84950e"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

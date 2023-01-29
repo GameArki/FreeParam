@@ -1,5 +1,5 @@
-bool b = true;
-bool[] barr = [true, false, true, false, true];
+bool b = True;
+bool[] barr = [True, False, True, False, True];
 
 byte u8 = 3;
 byte[] u8arr = [1, 2, 3, 4, 5];
