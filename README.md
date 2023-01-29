@@ -28,6 +28,10 @@ int myInt = 5;
 ``` C#
 using GameArki.FreeParam;
 
+// 初始化
+FreeParamCore.Initialize("MyParam.txt");
+
+// 调用
 bool exist = FreeParamCore.TryGetInt("myInt", out int value);
 Console.WriteLine(value); // 5
 ```
