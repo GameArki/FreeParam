@@ -25,8 +25,8 @@ ulong[] u64arr = [8, 9, 10];
 long i64 = -8;
 long[] i64arr = [-8, -9, -10];
 
-float f32 = 9.0f;
-float[] f32arr = [9.0f, 10.0f, 11.0f];
+float f32 = 9.0;
+float[] f32arr = [9.0, 10.0, 11.0];
 
 double f64 = 10.0;
 double[] f64arr = [10.0, 11.0, 12.0];

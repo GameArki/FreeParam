@@ -147,7 +147,6 @@ namespace GameArki.FreeParam {
                     // 遇到 split 时, 读取 type, 并切换到 key
                     if (splits.Contains(cur)) {
                         tmpType = text.Substring(index, i - index);
-                        Debug.Log("FindType: " + tmpType);
                         if (types.Contains(tmpType)) {
                             status = Status.Key;
                             index = i + 1;
@@ -165,7 +164,6 @@ namespace GameArki.FreeParam {
                     // 遇到 = 时, 读取 key, 并切换到 value
                     if (cur == '=') {
                         tmpKey = text.Substring(index, i - index);
-                        Debug.Log("FindKey: " + tmpKey);
                         tmpKey = tmpKey.Trim();
                         status = Status.Value;
                         index = i + 1;
@@ -179,7 +177,6 @@ namespace GameArki.FreeParam {
                     // 遇到 ; 时, 读取 value, 并切换到 type
                     if (cur == ';') {
                         string tmpValue = text.Substring(index, i - index);
-                        Debug.Log("FindValue: " + tmpValue);
                         bool succ = D_OneType(tmpType, tmpKey, tmpValue);
                         if (succ) {
                             status = Status.Type;

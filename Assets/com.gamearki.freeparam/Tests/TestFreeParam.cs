@@ -12,7 +12,7 @@ namespace GameArki.FreeParam.Tests {
         public void Test() {
 
             string path = Path.Combine(Application.dataPath, "TestFreeParam.txt");
-            FreeParamCore.Initialize();
+            FreeParamCore.Initialize(path);
 
             object obj;
 
