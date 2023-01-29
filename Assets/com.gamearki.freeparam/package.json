@@ -1,7 +1,7 @@
 {
   "name": "com.gamearki.freeparam",
-  "version": "0.1.0",
-  "description": "便捷参数, 在调试时可调用文件内的参数, 不必重新编译",
+  "version": "1.0.0",
+  "description": "用文本替代参数的库，便于调试时不断修改参数值的情况（而不用重新编译代码）。",
   "displayName": "FreeParam",
   "unity": "2019.4",
   "author": {
