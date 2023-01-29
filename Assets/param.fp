@@ -1,0 +1,38 @@
+bool b = true;
+bool[] barr = [true, false, true, false, true];
+
+byte u8 = 3;
+byte[] u8arr = [1, 2, 3, 4, 5];
+
+sbyte i8 = 3;
+sbyte[] i8arr = [1, 2, 3, 4, 5];
+
+ushort u16 = 3;
+ushort[] u16arr = [1, 2, 3, 4, 5];
+
+short i16 = 3;
+short[] i16arr = [1, 2, 3, 4, 5];
+
+uint u32 = 3;
+uint[] u32arr = [1, 2, 3, 4, 5];
+
+int i32 = 3;
+int[] i32arr = [1, 2, 3, 4, 5];
+
+ulong u64 = 3;
+ulong[] u64arr = [1, 2, 3, 4, 5];
+
+long i64 = 3;
+long[] i64arr = [1, 2, 3, 4, 5];
+
+float f32 = 3.0;
+float[] f32arr = [1.0, 2.0, 3.0, 4.0, 5.0];
+
+double f64 = 3.0;
+double[] f64arr = [1.0, 2.0, 3.0, 4.0, 5.0];
+
+char c = 'a';
+char[] carr = ['a', 'b', 'c', 'd', 'e'];
+
+string s = "hello";
+string[] sarr = ["hello", "world", "foo", "bar", "baz"];
